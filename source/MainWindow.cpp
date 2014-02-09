@@ -116,7 +116,7 @@ MainWindow::MainWindow(): Gtk::Window(), current_track(NULL), vlc_inst(NULL), vl
 	show_all_children();
 	play_next();
 
-	Glib::signal_timeout().connect(sigc::mem_fun(*this, &MainWindow::on_update_timer), 1000);
+	Glib::signal_timeout().connect(sigc::mem_fun(*this, &MainWindow::on_update_timer), 750);
 }
 
 void MainWindow::on_action_file_open()
@@ -163,15 +163,16 @@ static string format_time(libvlc_time_t T)
 bool MainWindow::on_update_timer()
 {
 	if (!vlc_mp) return true;
-	if (libvlc_media_player_get_position(vlc_mp) >= 0.999999) {
-		if (current_track)
-			jockey->notify_played(current_track);
-		play_next();
-	}
 
 	libvlc_time_t length = libvlc_media_player_get_length(vlc_mp);
 	libvlc_time_t current = libvlc_media_player_get_time(vlc_mp);
 	libvlc_time_t left = length-current;
+
+	if (left <= 5) {
+		if (current_track)
+			jockey->notify_played(current_track);
+		play_next();
+	}
 
 	time_played_label.set_text(format_time(current));
 	time_left_label.set_text("-" + format_time(left));
